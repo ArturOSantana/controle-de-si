@@ -519,17 +519,79 @@ export default function SchedulePage() {
         )}
 
         {activeTab === 'goals' && (
-          <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6">
-            <div className="text-center py-12">
-              <TrendingUp className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-              <p className="text-slate-400 mb-4">Sistema de metas em desenvolvimento</p>
+          <div className="space-y-6">
+            {/* Botão Criar Meta */}
+            {goals.length > 0 && (
               <button
                 onClick={() => setShowGoalModal(true)}
-                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition-colors"
+                className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl font-black flex items-center justify-center gap-2 transition-all hover:scale-105"
               >
-                Criar Meta
+                <Plus className="w-5 h-5" />
+                Nova Meta
               </button>
+            )}
+
+            {/* Lista de Metas */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {goals.map(goal => {
+                const progress = (goal.currentHours / goal.targetHours) * 100;
+                const subject = goal.subjectId ? subjects.find(s => s.id === goal.subjectId) : null;
+                
+                return (
+                  <div key={goal.id} className="bg-slate-900 border-2 border-slate-800 rounded-xl p-6 hover:border-purple-500/50 transition-all">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <span className="text-xs font-bold text-slate-400 uppercase">
+                          {goal.type === 'daily' ? 'Meta Diária' :
+                           goal.type === 'weekly' ? 'Meta Semanal' :
+                           goal.type === 'monthly' ? 'Meta Mensal' : 'Meta Total'}
+                        </span>
+                        {subject && (
+                          <p className="text-sm text-slate-500 mt-1">{subject.name}</p>
+                        )}
+                      </div>
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        goal.completed ? 'bg-green-900/30 text-green-400' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {goal.completed ? 'Concluída' : 'Em Progresso'}
+                      </span>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-white font-bold">{goal.currentHours}h / {goal.targetHours}h</span>
+                        <span className="text-slate-400">{progress.toFixed(0)}%</span>
+                      </div>
+                      <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all"
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                    
+                    {goal.endDate && (
+                      <p className="text-xs text-slate-500">
+                        Prazo: {new Date(goal.endDate).toLocaleDateString('pt-BR')}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+            
+            {goals.length === 0 && (
+              <div className="text-center py-12">
+                <Target className="w-16 h-16 text-slate-700 mx-auto mb-4" />
+                <p className="text-slate-400 mb-4">Nenhuma meta criada</p>
+                <button
+                  onClick={() => setShowGoalModal(true)}
+                  className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-bold transition-colors"
+                >
+                  Criar Primeira Meta
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -562,6 +624,32 @@ export default function SchedulePage() {
           topics={topics}
           onClose={() => setShowScheduleModal(false)}
           onSave={addSchedule}
+        />
+      )}
+
+      {/* Modal: Criar Meta */}
+      {showGoalModal && (
+        <GoalModal
+          subjects={subjects}
+          onClose={() => setShowGoalModal(false)}
+          onSave={async (data: Partial<StudyGoal>) => {
+            if (!user) return;
+            const newGoal: StudyGoal = {
+              id: generateId(),
+              userId: user.id,
+              subjectId: data.subjectId,
+              type: data.type || 'weekly',
+              targetHours: data.targetHours || 10,
+              currentHours: 0,
+              startDate: new Date(),
+              endDate: data.endDate,
+              completed: false,
+              createdAt: new Date(),
+            };
+            await db.add(STORES.studyGoals, newGoal);
+            await loadData();
+            setShowGoalModal(false);
+          }}
         />
       )}
     </div>
@@ -932,6 +1020,94 @@ function ScheduleModal({ subjects, topics, onClose, onSave }: any) {
             className="flex-1 px-4 py-2 bg-pink-600 hover:bg-pink-700 disabled:bg-slate-700 disabled:text-slate-500 rounded-lg font-bold transition-colors"
           >
             Agendar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GoalModal({ subjects, onClose, onSave }: any) {
+  const [type, setType] = useState<'daily' | 'weekly' | 'monthly' | 'total'>('weekly');
+  const [subjectId, setSubjectId] = useState('');
+  const [targetHours, setTargetHours] = useState('10');
+  const [endDate, setEndDate] = useState('');
+
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+      <div className="bg-slate-900 rounded-2xl p-6 max-w-md w-full border-2 border-slate-800">
+        <h2 className="text-2xl font-black mb-4">Nova Meta</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-slate-400 mb-2">Tipo de Meta</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as any)}
+              className="w-full px-4 py-2 bg-slate-800 border-2 border-slate-700 rounded-lg text-white focus:border-purple-500 outline-none"
+            >
+              <option value="daily">Diária</option>
+              <option value="weekly">Semanal</option>
+              <option value="monthly">Mensal</option>
+              <option value="total">Total (Longo Prazo)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-bold text-slate-400 mb-2">Matéria (opcional)</label>
+            <select
+              value={subjectId}
+              onChange={(e) => setSubjectId(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-800 border-2 border-slate-700 rounded-lg text-white focus:border-purple-500 outline-none"
+            >
+              <option value="">Todas as matérias</option>
+              {subjects.map((s: StudySubject) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-bold text-slate-400 mb-2">Horas Alvo</label>
+            <input
+              type="number"
+              value={targetHours}
+              onChange={(e) => setTargetHours(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-800 border-2 border-slate-700 rounded-lg text-white focus:border-purple-500 outline-none"
+              placeholder="Ex: 10"
+              min="1"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-bold text-slate-400 mb-2">Data Limite (opcional)</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-4 py-2 bg-slate-800 border-2 border-slate-700 rounded-lg text-white focus:border-purple-500 outline-none"
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg font-bold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onSave({
+              type,
+              subjectId: subjectId || undefined,
+              targetHours: parseInt(targetHours) || 10,
+              endDate: endDate ? new Date(endDate) : undefined
+            })}
+            disabled={!targetHours || parseInt(targetHours) < 1}
+            className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-slate-700 disabled:text-slate-500 rounded-lg font-bold transition-colors"
+          >
+            Criar Meta
           </button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { db, generateId } from '@/lib/db';
 import { STORES } from '@/lib/db/schema';
 import type { PomodoroSession } from '@/lib/db/schema';
 import { Play, Pause, RotateCcw, Home, Coffee, Brain } from 'lucide-react';
+import PageHeader from '@/components/PageHeader';
 
 type TimerMode = 'focus' | 'short-break' | 'long-break';
 
@@ -184,29 +185,37 @@ export default function PomodoroPage() {
           : user.settings.longBreak * 60)) * 100)
     : 0;
 
+  const tutorialSteps = [
+    {
+      title: "Bem-vindo ao Pomodoro!",
+      description: "A Técnica Pomodoro divide seu trabalho em blocos de 25 minutos de foco intenso, seguidos de pausas curtas. Isso aumenta a produtividade e mantém sua mente fresca."
+    },
+    {
+      title: "Como Funcionar",
+      description: "Clique em PLAY para iniciar um pomodoro de 25 minutos. Quando terminar, você ganhará XP e o timer mudará automaticamente para uma pausa de 5 minutos."
+    },
+    {
+      title: "Pausas Longas",
+      description: "A cada 4 pomodoros completados, você ganha uma pausa longa de 15 minutos. Use esse tempo para relaxar completamente!"
+    },
+    {
+      title: "Controles",
+      description: "Use PAUSE para pausar o timer, e RESET para reiniciar. Você pode alternar entre os modos Foco, Pausa Curta e Pausa Longa clicando nos botões no topo."
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-      {/* Header */}
-      <div className="max-w-4xl mx-auto mb-8">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => router.push('/')}
-              className="flex items-center gap-2 text-slate-400 hover:text-white font-bold transition-colors"
-            >
-              <Home className="w-5 h-5" />
-              <span className="uppercase">Voltar</span>
-            </button>
-            <h1 className="text-3xl font-black text-white">
-              POMODORO
-            </h1>
-            <div className="w-24" />
-          </div>
-        </div>
-      </div>
+      <div className="max-w-4xl mx-auto">
+        <PageHeader
+          title="Pomodoro"
+          description="Técnica de produtividade com blocos de foco"
+          gradient="from-red-400 to-orange-500"
+          tutorialSteps={tutorialSteps}
+        />
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto">
+        {/* Main Content */}
+        <main>
         {/* Mode Selector */}
         <div className="flex justify-center gap-3 mb-8">
           <button
@@ -352,7 +361,8 @@ export default function PomodoroPage() {
             </p>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

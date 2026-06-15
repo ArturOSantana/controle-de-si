@@ -547,7 +547,20 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl p-6 relative overflow-hidden group hover:scale-105 transition-transform">
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
             <div className="relative">
-              <Flame className="w-8 h-8 text-white/80 mb-3" />
+              {useImageIcons ? (
+                <div className="relative w-8 h-8 mb-3">
+                  <Image
+                    src="/menu-icons/sequencia.gif"
+                    alt="Sequência"
+                    fill
+                    sizes="32px"
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <Flame className="w-8 h-8 text-white/80 mb-3" />
+              )}
               <p className="text-white/80 text-sm font-medium mb-1">Sequência</p>
               <p className="text-4xl font-black text-white">{userStats?.currentStreak || 0}</p>
               <p className="text-white/60 text-xs mt-1">dias seguidos</p>
@@ -557,7 +570,20 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl p-6 relative overflow-hidden group hover:scale-105 transition-transform">
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
             <div className="relative">
-              <Clock className="w-8 h-8 text-white/80 mb-3" />
+              {useImageIcons ? (
+                <div className="relative w-8 h-8 mb-3">
+                  <Image
+                    src="/menu-icons/focohj.gif"
+                    alt="Foco Hoje"
+                    fill
+                    sizes="32px"
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <Clock className="w-8 h-8 text-white/80 mb-3" />
+              )}
               <p className="text-white/80 text-sm font-medium mb-1">Foco Hoje</p>
               <p className="text-4xl font-black text-white">{todayFocusTime}</p>
               <p className="text-white/60 text-xs mt-1">minutos</p>
@@ -567,7 +593,20 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 relative overflow-hidden group hover:scale-105 transition-transform">
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
             <div className="relative">
-              <CheckCircle2 className="w-8 h-8 text-white/80 mb-3" />
+              {useImageIcons ? (
+                <div className="relative w-8 h-8 mb-3">
+                  <Image
+                    src="/menu-icons/tarefashome.gif"
+                    alt="Tarefas"
+                    fill
+                    sizes="32px"
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <CheckCircle2 className="w-8 h-8 text-white/80 mb-3" />
+              )}
               <p className="text-white/80 text-sm font-medium mb-1">Tarefas</p>
               <p className="text-4xl font-black text-white">
                 {todayTasks.filter(t => t.completed).length}/{todayTasks.length}
@@ -579,7 +618,20 @@ export default function HomePage() {
           <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-6 relative overflow-hidden group hover:scale-105 transition-transform">
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-colors" />
             <div className="relative">
-              <TrendingUp className="w-8 h-8 text-white/80 mb-3" />
+              {useImageIcons ? (
+                <div className="relative w-8 h-8 mb-3">
+                  <Image
+                    src="/menu-icons/xp.gif"
+                    alt="XP Total"
+                    fill
+                    sizes="32px"
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
+              ) : (
+                <TrendingUp className="w-8 h-8 text-white/80 mb-3" />
+              )}
               <p className="text-white/80 text-sm font-medium mb-1">XP Total</p>
               <p className="text-4xl font-black text-white">{userStats?.xp || 0}</p>
               <p className="text-white/60 text-xs mt-1">pontos</p>

@@ -111,7 +111,9 @@ export default function HomePage() {
             pomodoroTime: 25,
             shortBreak: 5,
             longBreak: 15,
-            dailyGoal: 120 // 2 horas por dia
+            dailyGoal: 120, // 2 horas por dia
+            journalReminderEnabled: false,
+            weeklyPlanningEnabled: false
           }
         };
         

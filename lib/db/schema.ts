@@ -16,6 +16,11 @@ export interface UserSettings {
   shortBreak: number;
   longBreak: number;
   dailyGoal: number; // minutos de foco por dia
+  journalReminderTime?: string; // "20:00"
+  journalReminderEnabled: boolean;
+  weeklyPlanningDay?: number; // 0-6 (domingo-sábado)
+  weeklyPlanningTime?: string; // "19:00"
+  weeklyPlanningEnabled: boolean;
 }
 
 export interface Habit {
@@ -24,11 +29,14 @@ export interface Habit {
   name: string;
   description?: string;
   frequency: 'daily' | 'weekly' | 'monthly';
+  weeklyResetDay?: number; // 0-6 (domingo-sábado) para hábitos semanais
+  monthlyResetDay?: number; // 1-31 para hábitos mensais
   anchor?: string; // Habit stacking - após qual hábito
   duration: number; // minutos
   time?: string; // horário sugerido
   streak: number;
   lastCompleted?: Date;
+  lastReset?: Date; // última vez que o hábito foi resetado
   createdAt: Date;
   active: boolean;
 }
@@ -51,6 +59,7 @@ export interface Task {
   category: 'inbox' | 'today' | 'scheduled' | 'someday' | 'delegated' | 'archived';
   priority: 'high' | 'medium' | 'low';
   dueDate?: Date;
+  scheduledDate?: Date; // data agendada para planejamento semanal
   completed: boolean;
   completedAt?: Date;
   createdAt: Date;

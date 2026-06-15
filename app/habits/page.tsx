@@ -21,7 +21,7 @@ import {
   ArrowRight,
   Zap
 } from 'lucide-react';
-import { format, startOfDay, isToday } from 'date-fns';
+import { format, startOfDay, isToday, startOfWeek, startOfMonth, isAfter, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale';
 import { HABITS_LIBRARY, HABIT_CATEGORIES, type HabitTemplate } from '@/lib/habits-library';
 
@@ -77,7 +77,9 @@ export default function HabitsPage() {
             pomodoroTime: 25,
             shortBreak: 5,
             longBreak: 15,
-            dailyGoal: 120
+            dailyGoal: 120,
+            journalReminderEnabled: false,
+            weeklyPlanningEnabled: false
           }
         };
         
@@ -136,6 +138,125 @@ export default function HabitsPage() {
       setLoading(false);
     }
   };
+
+  // Função para verificar e resetar hábitos
+  const checkAndResetHabits = async () => {
+    if (!user) return;
+    const today = startOfDay(new Date());
+    
+    for (const habit of habits) {
+      let shouldReset = false;
+      let resetDate = habit.lastReset ? startOfDay(new Date(habit.lastReset)) : null;
+      
+      // Verificar se precisa resetar baseado na frequência
+      if (habit.frequency === 'daily') {
+        // Reset diário: se não foi resetado hoje
+        shouldReset = !resetDate || !isSameDay(resetDate, today);
+      } else if (habit.frequency === 'weekly') {
+        // Reset semanal: verificar dia da semana escolhido
+        const weekStartDay = (habit.weeklyResetDay || 0) as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        const weekStart = startOfWeek(today, { weekStartsOn: weekStartDay });
+        shouldReset = !resetDate || isAfter(weekStart, resetDate);
+      } else if (habit.frequency === 'monthly') {
+        // Reset mensal: verificar dia do mês escolhido
+        const monthStart = startOfMonth(today);
+        const resetDay = habit.monthlyResetDay || 1;
+        const monthResetDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), resetDay);
+        shouldReset = !resetDate || isAfter(monthResetDate, resetDate);
+      }
+      
+      if (shouldReset) {
+        // Criar novo log para o período
+        const logs = await db.getByIndex<HabitLog>(STORES.habitLogs, 'habitId', habit.id);
+        const todayLog = logs.find(l => isSameDay(new Date(l.date), today));
+        
+        if (!todayLog) {
+          await db.add(STORES.habitLogs, {
+            id: generateId(),
+            habitId: habit.id,
+            userId: user.id,
+            completed: false,
+            date: today
+          });
+        }
+        
+        // Atualizar lastReset
+        habit.lastReset = today;
+        await db.update(STORES.habits, habit);
+      }
+    }
+    loadHabits();
+  };
+
+  // Função para verificar deadlines e enviar notificações
+  const checkHabitDeadlines = async () => {
+    if (!user) return;
+    const now = new Date();
+    const today = startOfDay(now);
+    
+    for (const habit of habits) {
+      const isCompleted = todayLogs.has(habit.id);
+      if (isCompleted) continue;
+      
+      let deadline: Date | null = null;
+      let timeLeft = '';
+      
+      if (habit.frequency === 'daily') {
+        // Deadline: fim do dia (23:59)
+        deadline = new Date(today);
+        deadline.setHours(23, 59, 59);
+        const hoursLeft = Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60));
+        if (hoursLeft <= 3 && hoursLeft > 0) {
+          timeLeft = `${hoursLeft}h`;
+        }
+      } else if (habit.frequency === 'weekly') {
+        // Deadline: fim da semana
+        const weekStartDay = (habit.weeklyResetDay || 0) as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        const weekStart = startOfWeek(today, { weekStartsOn: weekStartDay });
+        deadline = new Date(weekStart);
+        deadline.setDate(deadline.getDate() + 6);
+        deadline.setHours(23, 59, 59);
+        const daysLeft = Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 1 && daysLeft >= 0) {
+          timeLeft = daysLeft === 0 ? 'hoje' : '1 dia';
+        }
+      } else if (habit.frequency === 'monthly') {
+        // Deadline: fim do mês
+        const monthStart = startOfMonth(today);
+        deadline = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+        deadline.setHours(23, 59, 59);
+        const daysLeft = Math.floor((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 3 && daysLeft >= 0) {
+          timeLeft = `${daysLeft} dia${daysLeft !== 1 ? 's' : ''}`;
+        }
+      }
+      
+      // Enviar notificação se estiver perto do deadline
+      if (timeLeft && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification('Hábito Pendente', {
+          body: `"${habit.name}" vence em ${timeLeft}!`,
+          icon: '/icon-192x192.png',
+          tag: `habit-deadline-${habit.id}`
+        });
+      }
+    }
+  };
+
+  // Executar verificações ao montar e a cada hora
+  useEffect(() => {
+    if (user && habits.length > 0) {
+      checkAndResetHabits();
+      checkHabitDeadlines();
+      
+      // Verificar a cada hora
+      const interval = setInterval(() => {
+        checkAndResetHabits();
+        checkHabitDeadlines();
+      }, 60 * 60 * 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user, habits]);
 
   const toggleHabit = async (habit: Habit) => {
     if (!user) return;
@@ -374,7 +495,7 @@ export default function HabitsPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-black text-lg uppercase mb-1">
-                    ⚡ PRÓXIMO NA CORRENTE!
+                    PRÓXIMO NA CORRENTE
                   </p>
                   <p className="text-yellow-100 font-bold">
                     Que tal fazer agora: <span className="text-white">{suggestedNextHabit.name}</span>?
@@ -474,7 +595,7 @@ export default function HabitsPage() {
                 NENHUM HÁBITO AINDA
               </h3>
               <p className="text-slate-400 mb-8 font-medium">
-                Comece criando seu primeiro hábito e transforme sua vida! 🚀
+                Comece criando seu primeiro hábito e transforme sua vida!
               </p>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -690,6 +811,8 @@ function AddHabitModal({ onClose, onAdd, userId, editingHabit }: {
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'monthly'>(editingHabit?.frequency || 'daily');
   const [anchor, setAnchor] = useState(editingHabit?.anchor || '');
   const [duration, setDuration] = useState(editingHabit?.duration || 5);
+  const [weeklyResetDay, setWeeklyResetDay] = useState(editingHabit?.weeklyResetDay || 0);
+  const [monthlyResetDay, setMonthlyResetDay] = useState(editingHabit?.monthlyResetDay || 1);
   const [existingHabits, setExistingHabits] = useState<Habit[]>([]);
   const [useCustomAnchor, setUseCustomAnchor] = useState(!!editingHabit?.anchor && !existingHabits.some(h => h.name === editingHabit.anchor));
 
@@ -704,6 +827,8 @@ function AddHabitModal({ onClose, onAdd, userId, editingHabit }: {
       setFrequency(editingHabit.frequency);
       setAnchor(editingHabit.anchor || '');
       setDuration(editingHabit.duration || 5);
+      setWeeklyResetDay(editingHabit.weeklyResetDay || 0);
+      setMonthlyResetDay(editingHabit.monthlyResetDay || 1);
     }
   }, [editingHabit]);
 
@@ -730,7 +855,9 @@ function AddHabitModal({ onClose, onAdd, userId, editingHabit }: {
         description: description.trim() || undefined,
         frequency,
         anchor: anchor.trim() || undefined,
-        duration
+        duration,
+        weeklyResetDay: frequency === 'weekly' ? weeklyResetDay : undefined,
+        monthlyResetDay: frequency === 'monthly' ? monthlyResetDay : undefined
       };
       await db.update(STORES.habits, updatedHabit);
     } else {
@@ -743,6 +870,8 @@ function AddHabitModal({ onClose, onAdd, userId, editingHabit }: {
         frequency,
         anchor: anchor.trim() || undefined,
         duration,
+        weeklyResetDay: frequency === 'weekly' ? weeklyResetDay : undefined,
+        monthlyResetDay: frequency === 'monthly' ? monthlyResetDay : undefined,
         streak: 0,
         createdAt: new Date(),
         active: true
@@ -797,11 +926,56 @@ function AddHabitModal({ onClose, onAdd, userId, editingHabit }: {
               onChange={(e) => setFrequency(e.target.value as any)}
               className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white focus:border-green-500 focus:outline-none transition-colors font-bold uppercase"
             >
-              <option value="daily">📅 Diário</option>
+              <option value="daily">Diário</option>
               <option value="weekly">Semanal</option>
               <option value="monthly">Mensal</option>
             </select>
           </div>
+
+          {/* Configuração de Reset Semanal */}
+          {frequency === 'weekly' && (
+            <div>
+              <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                Dia de Reset Semanal
+              </label>
+              <select
+                value={weeklyResetDay}
+                onChange={(e) => setWeeklyResetDay(parseInt(e.target.value))}
+                className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white focus:border-green-500 focus:outline-none transition-colors font-bold"
+              >
+                <option value="0">Domingo</option>
+                <option value="1">Segunda-feira</option>
+                <option value="2">Terça-feira</option>
+                <option value="3">Quarta-feira</option>
+                <option value="4">Quinta-feira</option>
+                <option value="5">Sexta-feira</option>
+                <option value="6">Sábado</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-2 font-medium">
+                O hábito será resetado toda semana neste dia
+              </p>
+            </div>
+          )}
+
+          {/* Configuração de Reset Mensal */}
+          {frequency === 'monthly' && (
+            <div>
+              <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                Dia de Reset Mensal
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="31"
+                value={monthlyResetDay}
+                onChange={(e) => setMonthlyResetDay(parseInt(e.target.value))}
+                className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white focus:border-green-500 focus:outline-none transition-colors font-bold"
+              />
+              <p className="text-xs text-slate-500 mt-2 font-medium">
+                O hábito será resetado todo mês neste dia (1-31)
+              </p>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-bold text-slate-400 uppercase mb-2">

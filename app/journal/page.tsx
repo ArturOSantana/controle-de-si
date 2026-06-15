@@ -20,7 +20,8 @@ import {
   Save,
   Lightbulb,
   Target,
-  TrendingUp
+  TrendingUp,
+  Bell
 } from 'lucide-react';
 import { format, startOfDay, subDays, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -54,6 +55,9 @@ export default function JournalPage() {
     pomodoro: [],
     study: []
   });
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderTime, setReminderTime] = useState('20:00');
+  const [reminderEnabled, setReminderEnabled] = useState(false);
 
   useEffect(() => {
     loadEntries();
@@ -102,6 +106,79 @@ export default function JournalPage() {
       setRecentSessions({ pomodoro: recentPomodoro, study: recentStudy });
     } catch (error) {
       console.error('Erro ao carregar sessões:', error);
+    }
+  };
+
+  // Carregar configurações de lembrete
+  useEffect(() => {
+    if (user?.settings) {
+      setReminderTime(user.settings.journalReminderTime || '20:00');
+      setReminderEnabled(user.settings.journalReminderEnabled || false);
+      
+      if (user.settings.journalReminderEnabled && user.settings.journalReminderTime) {
+        scheduleJournalReminder(user.settings.journalReminderTime);
+      }
+    }
+  }, [user]);
+
+  // Função para agendar lembrete do diário
+  const scheduleJournalReminder = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    const now = new Date();
+    const scheduledTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+    
+    // Se o horário já passou hoje, agendar para amanhã
+    if (scheduledTime <= now) {
+      scheduledTime.setDate(scheduledTime.getDate() + 1);
+    }
+    
+    const timeUntilReminder = scheduledTime.getTime() - now.getTime();
+    
+    setTimeout(() => {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Hora do Diário!', {
+          body: 'Que tal escrever sobre o que você aprendeu hoje?',
+          icon: '/icon-192x192.png',
+          tag: 'journal-reminder'
+        });
+      }
+      
+      // Reagendar para o próximo dia
+      scheduleJournalReminder(time);
+    }, timeUntilReminder);
+  };
+
+  // Função para salvar configurações de lembrete
+  const saveReminderSettings = async () => {
+    if (!user) return;
+    
+    try {
+      const updatedUser = {
+        ...user,
+        settings: {
+          ...user.settings,
+          journalReminderTime: reminderTime,
+          journalReminderEnabled: reminderEnabled
+        }
+      };
+      
+      await db.update(STORES.users, updatedUser);
+      
+      // Solicitar permissão de notificação se ainda não foi concedida
+      if (reminderEnabled && 'Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+      
+      // Agendar lembrete se habilitado
+      if (reminderEnabled) {
+        scheduleJournalReminder(reminderTime);
+      }
+      
+      setShowReminderModal(false);
+      alert('Configurações de lembrete salvas!');
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      alert('Erro ao salvar configurações. Tente novamente.');
     }
   };
 
@@ -175,15 +252,24 @@ export default function JournalPage() {
               <span className="uppercase">Voltar</span>
             </button>
             <h1 className="text-3xl font-black text-white">
-              📔 DIÁRIO DE APRENDIZADO
+              DIÁRIO DE APRENDIZADO
             </h1>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-5 py-2.5 rounded-xl font-black uppercase shadow-lg shadow-purple-500/50 hover:scale-105 transition-all"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="hidden sm:inline">Nova Entrada</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowReminderModal(true)}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all"
+                title="Configurar lembretes"
+              >
+                <Bell className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-5 py-2.5 rounded-xl font-black uppercase shadow-lg shadow-purple-500/50 hover:scale-105 transition-all"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="hidden sm:inline">Nova Entrada</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -235,7 +321,7 @@ export default function JournalPage() {
           <div className="bg-slate-900 border-2 border-slate-800 rounded-xl p-6 hover:border-yellow-500/50 transition-all">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-xs font-bold uppercase mb-2">💭 Reflexões</p>
+                <p className="text-slate-400 text-xs font-bold uppercase mb-2">Reflexões</p>
                 <p className="text-4xl font-black text-white">
                   {entries.filter(e => e.type === 'reflection').length}
                 </p>
@@ -300,7 +386,7 @@ export default function JournalPage() {
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
-                💭 Reflexão
+                Reflexão
               </button>
             </div>
           </div>
@@ -432,6 +518,79 @@ export default function JournalPage() {
         )}
       </main>
 
+      {/* Reminder Settings Modal */}
+      {showReminderModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                <Bell className="w-7 h-7 text-purple-400" />
+                LEMBRETES DO DIÁRIO
+              </h2>
+              <button
+                onClick={() => setShowReminderModal(false)}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={reminderEnabled}
+                    onChange={(e) => setReminderEnabled(e.target.checked)}
+                    className="w-5 h-5 rounded border-2 border-slate-700 bg-slate-800 checked:bg-purple-500 checked:border-purple-500 transition-colors"
+                  />
+                  <span className="text-white font-bold">Ativar lembretes diários</span>
+                </label>
+              </div>
+
+              {reminderEnabled && (
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 uppercase mb-2">
+                    Horário do Lembrete
+                  </label>
+                  <input
+                    type="time"
+                    value={reminderTime}
+                    onChange={(e) => setReminderTime(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-800 border-2 border-slate-700 rounded-xl text-white focus:border-purple-500 focus:outline-none transition-colors font-bold"
+                  />
+                  <p className="text-xs text-slate-500 mt-2 font-medium">
+                    Você receberá uma notificação todos os dias neste horário
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+                <p className="text-sm text-purple-300 font-medium">
+                  Dica: Escrever no diário ajuda a consolidar o aprendizado e identificar padrões de crescimento!
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowReminderModal(false)}
+                  className="flex-1 px-6 py-3 bg-slate-800 border-2 border-slate-700 text-white rounded-xl hover:border-slate-600 transition-all font-black uppercase"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveReminderSettings}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white rounded-xl font-black uppercase shadow-lg shadow-purple-500/50 hover:scale-105 transition-all"
+                >
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add Entry Modal */}
       {showAddModal && (
         <AddEntryModal
@@ -527,7 +686,7 @@ function AddEntryModal({ onClose, onAdd, recentSessions }: {
                     : 'bg-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
-                💭 Reflexão
+                Reflexão
               </button>
             </div>
           </div>

@@ -8,6 +8,7 @@ import type { User, UserStats, Habit, Task, PomodoroSession } from '@/lib/db/sch
 import { notificationManager, scheduleHabitReminders } from '@/lib/notifications';
 import WelcomeModal from '@/components/WelcomeModal';
 import Tutorial from '@/components/Tutorial';
+import Image from 'next/image';
 import {
   Target,
   Clock,
@@ -25,11 +26,29 @@ import {
   BookOpen,
   Bell,
   BellOff,
-  Calendar
+  Calendar,
+  Image as ImageIcon,
+  Sparkles
 } from 'lucide-react';
 
+// Mapeamento de ícones para as ações rápidas
+const quickActionIcons = {
+  pomodoro: { icon: Play, imageName: 'pomodoro', color: 'red' },
+  habits: { icon: Plus, imageName: 'habits', color: 'green' },
+  tasks: { icon: ListTodo, imageName: 'tasks', color: 'blue' },
+  addictions: { icon: Target, imageName: 'addictions', color: 'purple' },
+  study: { icon: Brain, imageName: 'study', color: 'indigo' },
+  schedule: { icon: Calendar, imageName: 'timeblock', color: 'violet' },
+  journal: { icon: BookOpen, imageName: 'journal', color: 'orange' },
+  analytics: { icon: BarChart3, imageName: 'analytics', color: 'cyan' },
+  achievements: { icon: Trophy, imageName: 'achievements', color: 'yellow' },
+  rewards: { icon: Gift, imageName: 'rewards', color: 'pink' },
+  timeblock: { icon: Clock, imageName: 'timeblock', color: 'cyan' },
+  reports: { icon: FileText, imageName: 'reports', color: 'teal' },
+};
+
 export default function HomePage() {
-  const { user, userStats, setUser, setUserStats, setInitialized, darkMode } = useAppStore();
+  const { user, userStats, setUser, setUserStats, setInitialized, darkMode, useImageIcons } = useAppStore();
   const [loading, setLoading] = useState(true);
   const [todayHabits, setTodayHabits] = useState<Habit[]>([]);
   const [todayTasks, setTodayTasks] = useState<Task[]>([]);
@@ -309,23 +328,44 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Header com design único */}
-      <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <header className="border-b border-slate-800/50 bg-gradient-to-r from-slate-900/80 via-slate-900/50 to-slate-900/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-xl flex items-center justify-center text-2xl font-black text-white shadow-lg shadow-violet-500/50">
-                C
+              <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center hover:bg-slate-700 transition-colors">
+                <img
+                  src="/logo.png"
+                  alt="Controle de Si"
+                  className="w-12 h-12 object-contain"
+                />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white tracking-tight">
+                <h1 className="text-2xl font-black bg-gradient-to-r from-white via-violet-200 to-fuchsia-200 bg-clip-text text-transparent tracking-tight">
                   Controle de Si
                 </h1>
-                <p className="text-sm text-slate-400">
-                  E aí, {user?.name}! Bora dominar o dia
+                <p className="text-sm text-slate-400 font-medium">
+                  E aí, <span className="text-violet-400 font-bold">{user?.name}</span>! Bora dominar o dia
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-6">
+              {/* Botão de Alternância de Ícones */}
+              <button
+                onClick={() => useAppStore.getState().toggleImageIcons()}
+                className={`p-3 rounded-xl transition-all ${
+                  useImageIcons
+                    ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30'
+                    : 'bg-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/30'
+                }`}
+                title={useImageIcons ? 'Usar ícones do sistema' : 'Usar imagens personalizadas'}
+              >
+                {useImageIcons ? (
+                  <Sparkles className="w-5 h-5" />
+                ) : (
+                  <ImageIcon className="w-5 h-5" />
+                )}
+              </button>
+
               {/* Botão de Notificações */}
               <button
                 onClick={toggleNotifications}
@@ -441,37 +481,38 @@ export default function HomePage() {
                 Ações Rápidas
               </p>
               <div className="grid grid-cols-2 gap-3">
-                <a
-                  href="/habits"
-                  className="bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
-                >
-                  <Plus className="w-6 h-6 text-white" />
-                  <span className="text-white font-bold text-sm text-center">Novo Hábito</span>
-                </a>
-                
-                <a
-                  href="/pomodoro"
-                  className="bg-gradient-to-br from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
-                >
-                  <Play className="w-6 h-6 text-white" />
-                  <span className="text-white font-bold text-sm text-center">Pomodoro</span>
-                </a>
-                
-                <a
-                  href="/tasks"
-                  className="bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
-                >
-                  <ListTodo className="w-6 h-6 text-white" />
-                  <span className="text-white font-bold text-sm text-center">Nova Tarefa</span>
-                </a>
-                
-                <a
-                  href="/study"
-                  className="bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95"
-                >
-                  <Brain className="w-6 h-6 text-white" />
-                  <span className="text-white font-bold text-sm text-center">Estudar</span>
-                </a>
+                {[
+                  { href: '/habits', key: 'habits', label: 'Novo Hábito', gradient: 'from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700' },
+                  { href: '/pomodoro', key: 'pomodoro', label: 'Pomodoro', gradient: 'from-red-500 to-orange-600 hover:from-red-600 hover:to-orange-700' },
+                  { href: '/tasks', key: 'tasks', label: 'Nova Tarefa', gradient: 'from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700' },
+                  { href: '/study', key: 'study', label: 'Estudar', gradient: 'from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700' },
+                ].map(({ href, key, label, gradient }) => {
+                  const iconData = quickActionIcons[key as keyof typeof quickActionIcons];
+                  const Icon = iconData.icon;
+                  
+                  return (
+                    <a
+                      key={key}
+                      href={href}
+                      className={`bg-gradient-to-br ${gradient} rounded-xl p-4 flex flex-col items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95`}
+                    >
+                      {useImageIcons ? (
+                        <div className="relative w-6 h-6">
+                          <Image
+                            src={`/menu-icons/${iconData.imageName}.png`}
+                            alt={label}
+                            fill
+                            sizes="24px"
+                            className="object-contain "
+                          />
+                        </div>
+                      ) : (
+                        <Icon className="w-6 h-6 text-white" />
+                      )}
+                      <span className="text-white font-bold text-sm text-center">{label}</span>
+                    </a>
+                  );
+                })}
               </div>
             </div>
 
@@ -549,7 +590,13 @@ export default function HomePage() {
           <a href="/pomodoro" className="group bg-slate-900 border-2 border-red-500/30 hover:border-red-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-red-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500 transition-colors">
-                <Play className="w-5 h-5 sm:w-6 sm:h-6 text-red-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/pomodoro.png" alt="Pomodoro" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Play className="w-5 h-5 sm:w-6 sm:h-6 text-red-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Pomodoro</span>
             </div>
@@ -558,7 +605,13 @@ export default function HomePage() {
           <a href="/habits" className="group bg-slate-900 border-2 border-green-500/30 hover:border-green-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-500/20 rounded-lg flex items-center justify-center group-hover:bg-green-500 transition-colors">
-                <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/habits.png" alt="Hábitos" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Plus className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Hábitos</span>
             </div>
@@ -567,7 +620,13 @@ export default function HomePage() {
           <a href="/tasks" className="group bg-slate-900 border-2 border-blue-500/30 hover:border-blue-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                <ListTodo className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/tasks.png" alt="Tarefas" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <ListTodo className="w-5 h-5 sm:w-6 sm:h-6 text-blue-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Tarefas</span>
             </div>
@@ -576,7 +635,13 @@ export default function HomePage() {
           <a href="/addictions" className="group bg-slate-900 border-2 border-purple-500/30 hover:border-purple-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                <Target className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/addictions.png" alt="Vícios" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Vícios</span>
             </div>
@@ -585,7 +650,13 @@ export default function HomePage() {
           <a href="/study" className="group bg-slate-900 border-2 border-indigo-500/30 hover:border-indigo-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
-                <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/study.png" alt="Estudar" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Brain className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Estudar</span>
             </div>
@@ -594,7 +665,13 @@ export default function HomePage() {
           <a href="/schedule" className="group bg-slate-900 border-2 border-violet-500/30 hover:border-violet-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-violet-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-violet-500/20 rounded-lg flex items-center justify-center group-hover:bg-violet-500 transition-colors">
-                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/timeblock.png" alt="Cronograma" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-violet-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Cronograma</span>
             </div>
@@ -603,7 +680,13 @@ export default function HomePage() {
           <a href="/journal" className="group bg-slate-900 border-2 border-orange-500/30 hover:border-orange-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-orange-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-500/20 rounded-lg flex items-center justify-center group-hover:bg-orange-500 transition-colors">
-                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/journal.jpg" alt="Diário" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Diário</span>
             </div>
@@ -612,7 +695,13 @@ export default function HomePage() {
           <a href="/analytics" className="group bg-slate-900 border-2 border-cyan-500/30 hover:border-cyan-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center group-hover:bg-cyan-500 transition-colors">
-                <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/analytics.png" alt="Análises" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Análises</span>
             </div>
@@ -621,7 +710,13 @@ export default function HomePage() {
           <a href="/achievements" className="group bg-slate-900 border-2 border-yellow-500/30 hover:border-yellow-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500 transition-colors">
-                <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/achievements.png" alt="Badges" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Badges</span>
             </div>
@@ -630,7 +725,13 @@ export default function HomePage() {
           <a href="/rewards" className="group bg-slate-900 border-2 border-pink-500/30 hover:border-pink-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-pink-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-500/20 rounded-lg flex items-center justify-center group-hover:bg-pink-500 transition-colors">
-                <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/rewards.png" alt="Prêmios" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-pink-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Prêmios</span>
             </div>
@@ -639,7 +740,13 @@ export default function HomePage() {
           <a href="/timeblock" className="group bg-slate-900 border-2 border-cyan-500/30 hover:border-cyan-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center group-hover:bg-cyan-500 transition-colors">
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/timeblock.png" alt="Agenda" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Agenda</span>
             </div>
@@ -648,7 +755,13 @@ export default function HomePage() {
           <a href="/reports" className="group bg-slate-900 border-2 border-teal-500/30 hover:border-teal-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-teal-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-teal-500/20 rounded-lg flex items-center justify-center group-hover:bg-teal-500 transition-colors">
-                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-teal-400 group-hover:text-white" />
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/reports.jpg" alt="Relatório" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-teal-400 group-hover:text-white" />
+                )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Relatório</span>
             </div>

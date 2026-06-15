@@ -11,6 +11,7 @@ interface AppState {
   // UI
   darkMode: boolean;
   sidebarOpen: boolean;
+  useImageIcons: boolean;
   
   // Actions
   setUser: (user: User | null) => void;
@@ -18,6 +19,7 @@ interface AppState {
   updateSettings: (settings: Partial<UserSettings>) => void;
   toggleDarkMode: () => void;
   toggleSidebar: () => void;
+  toggleImageIcons: () => void;
   setInitialized: (value: boolean) => void;
   
   // Stats
@@ -35,6 +37,7 @@ export const useAppStore = create<AppState>()(
       isInitialized: false,
       darkMode: false,
       sidebarOpen: true,
+      useImageIcons: false,
 
       // Actions
       setUser: (user) => set({ user }),
@@ -61,6 +64,8 @@ export const useAppStore = create<AppState>()(
       }),
       
       toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+      
+      toggleImageIcons: () => set((state) => ({ useImageIcons: !state.useImageIcons })),
       
       setInitialized: (value) => set({ isInitialized: value }),
       
@@ -110,7 +115,8 @@ export const useAppStore = create<AppState>()(
       name: 'controle-de-si-storage',
       partialize: (state) => ({
         darkMode: state.darkMode,
-        sidebarOpen: state.sidebarOpen
+        sidebarOpen: state.sidebarOpen,
+        useImageIcons: state.useImageIcons
       })
     }
   )

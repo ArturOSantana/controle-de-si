@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,11 +34,15 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" href="/logo.png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <meta name="apple-mobile-web-app-title" content="Controle de Si" />
       </head>
-      <body className={`${inter.className} antialiased`}>
-        {children}
+      <body className={`${inter.className} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950`}>
+        <Navbar />
+        <main className="lg:pl-20 pb-20 lg:pb-0">
+          {children}
+        </main>
       </body>
     </html>
   );

@@ -50,11 +50,73 @@ export default function AddictionsPage() {
       
       const allLogs = await db.getByIndex<AddictionLog>(STORES.addictionLogs, 'userId', user.id);
       setLogs(allLogs);
+      
+      // Registrar vitórias automáticas para dias passados
+      await autoRegisterVictories(activeAddictions, allLogs);
     } catch (error) {
       console.error('Erro ao carregar vícios:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const autoRegisterVictories = async (addictions: Addiction[], logs: AddictionLog[]) => {
+    if (!user) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (const addiction of addictions) {
+      // Pegar último log deste vício
+      const addictionLogs = logs
+        .filter(l => l.addictionId === addiction.id)
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      const lastLog = addictionLogs[0];
+      
+      // Se não tem log ou último log foi antes de ontem
+      let lastLogDate = lastLog ? new Date(lastLog.date) : new Date(addiction.startDate);
+      lastLogDate.setHours(0, 0, 0, 0);
+      
+      // Calcular dias sem registro
+      const daysSinceLastLog = Math.floor((today.getTime() - lastLogDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Se passou 1 ou mais dias sem registro e último log não foi recaída
+      if (daysSinceLastLog >= 1 && (!lastLog || !lastLog.relapsed)) {
+        // Registrar vitórias para cada dia que passou
+        for (let i = 1; i <= daysSinceLastLog; i++) {
+          const victoryDate = new Date(lastLogDate);
+          victoryDate.setDate(victoryDate.getDate() + i);
+          
+          // Não registrar para hoje (usuário ainda pode ter recaída)
+          if (victoryDate.getTime() >= today.getTime()) continue;
+          
+          // Verificar se já existe log para este dia
+          const existingLog = logs.find(l => {
+            const logDate = new Date(l.date);
+            logDate.setHours(0, 0, 0, 0);
+            return l.addictionId === addiction.id && logDate.getTime() === victoryDate.getTime();
+          });
+          
+          if (!existingLog) {
+            const victoryLog: AddictionLog = {
+              id: generateId(),
+              addictionId: addiction.id,
+              userId: user.id,
+              date: victoryDate,
+              relapsed: false,
+              notes: 'Vitória automática - dia sem recaída'
+            };
+            
+            await db.add(STORES.addictionLogs, victoryLog);
+          }
+        }
+      }
+    }
+    
+    // Recarregar logs após registrar vitórias
+    const updatedLogs = await db.getByIndex<AddictionLog>(STORES.addictionLogs, 'userId', user.id);
+    setLogs(updatedLogs);
   };
 
   const getSobrietyDays = (addiction: Addiction): number => {
@@ -92,6 +154,23 @@ export default function AddictionsPage() {
   const handleVictory = async (addiction: Addiction) => {
     if (!user) return;
 
+    // Verificar se já registrou vitória hoje
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const todayLogs = logs.filter(l => {
+      const logDate = new Date(l.date);
+      logDate.setHours(0, 0, 0, 0);
+      return l.addictionId === addiction.id &&
+             logDate.getTime() === today.getTime() &&
+             !l.relapsed;
+    });
+
+    if (todayLogs.length > 0) {
+      alert('Você já registrou uma vitória hoje!');
+      return;
+    }
+
     const log: AddictionLog = {
       id: generateId(),
       addictionId: addiction.id,
@@ -111,6 +190,7 @@ export default function AddictionsPage() {
     if (days === 30) addXP(500);
     if (days === 90) addXP(1000);
     
+    alert(`Vitória registrada! ${days} dias limpo!`);
     loadAddictions();
   };
 
@@ -310,23 +390,19 @@ export default function AddictionsPage() {
                   {/* Actions */}
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleVictory(addiction)}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Vitória Hoje
-                    </button>
-                    <button
                       onClick={() => {
                         setSelectedAddiction(addiction);
                         setShowSOSModal(true);
                       }}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold transition-colors flex items-center justify-center gap-2 text-lg"
                     >
-                      <AlertTriangle className="w-4 h-4" />
-                      Recaída
+                      <AlertTriangle className="w-5 h-5" />
+                      Registrar Recaída
                     </button>
                   </div>
+                  <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
+                    Vitórias são registradas automaticamente a cada dia sem recaída
+                  </p>
                 </div>
               );
             })}
@@ -381,6 +457,10 @@ function AddAddictionModal({ onClose, onAdd, userId }: {
     
     if (!name.trim()) return;
 
+    // Criar vício com sobrietyDate como ontem para começar com 1 dia
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
     const addiction: Addiction = {
       id: generateId(),
       userId,
@@ -388,12 +468,13 @@ function AddAddictionModal({ onClose, onAdd, userId }: {
       type,
       description: description.trim() || undefined,
       startDate: new Date(),
-      sobrietyDate: new Date(),
+      sobrietyDate: yesterday, // Começa com 1 dia
       active: true
     };
 
     await db.add(STORES.addictions, addiction);
     onAdd();
+    onClose();
   };
 
   return (
@@ -573,7 +654,7 @@ function SOSModal({ onClose, addiction, onRelapse }: {
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-slate-900 border-2 border-slate-800 rounded-xl shadow-2xl max-w-md w-full p-8">
         <h2 className="text-3xl font-black text-white mb-4 uppercase text-center">
-          💭 Como você estava se sentindo?
+          Como você estava se sentindo?
         </h2>
 
         <div className="space-y-3 mb-8">
@@ -587,8 +668,8 @@ function SOSModal({ onClose, addiction, onRelapse }: {
                   : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-orange-500/50 hover:bg-slate-700'
               }`}
             >
-              {e === 'bored' ? '😐 Entediado' :
-               e === 'anxious' ? '😰 Ansioso' :
+              {e === 'bored' ? 'Entediado' :
+               e === 'anxious' ? 'Ansioso' :
                e === 'lonely' ? 'Solitário' :
                e === 'tired' ? 'Cansado' : 'Estressado'}
             </button>

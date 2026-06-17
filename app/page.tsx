@@ -640,7 +640,22 @@ export default function HomePage() {
         </div>
 
         {/* Quick Actions - Design mais ousado */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-10 gap-2 sm:gap-3 mb-8">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-11 gap-2 sm:gap-3 mb-8">
+          <a href="/sistema-m" className="group bg-slate-900 border-2 border-purple-500/30 hover:border-purple-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20 active:scale-95">
+            <div className="flex flex-col items-center gap-1 sm:gap-2">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500 transition-colors">
+                {useImageIcons ? (
+                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
+                    <Image src="/menu-icons/home.png" alt="Sistema M" fill sizes="24px" className="object-contain " />
+                  </div>
+                ) : (
+                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400 group-hover:text-white" />
+                )}
+              </div>
+              <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Sistema M</span>
+            </div>
+          </a>
+
           <a href="/pomodoro" className="group bg-slate-900 border-2 border-red-500/30 hover:border-red-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-red-500/20 active:scale-95">
             <div className="flex flex-col items-center gap-1 sm:gap-2">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/20 rounded-lg flex items-center justify-center group-hover:bg-red-500 transition-colors">
@@ -758,21 +773,6 @@ export default function HomePage() {
                 )}
               </div>
               <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Análises</span>
-            </div>
-          </a>
-
-          <a href="/achievements" className="group bg-slate-900 border-2 border-yellow-500/30 hover:border-yellow-500 rounded-xl p-3 sm:p-4 transition-all hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/20 active:scale-95">
-            <div className="flex flex-col items-center gap-1 sm:gap-2">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center group-hover:bg-yellow-500 transition-colors">
-                {useImageIcons ? (
-                  <div className="relative w-5 h-5 sm:w-6 sm:h-6">
-                    <Image src="/menu-icons/achievements.png" alt="Badges" fill sizes="24px" className="object-contain " />
-                  </div>
-                ) : (
-                  <Trophy className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 group-hover:text-white" />
-                )}
-              </div>
-              <span className="text-xs sm:text-sm font-bold text-white text-center leading-tight">Badges</span>
             </div>
           </a>
 

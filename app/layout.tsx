@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -9,8 +9,6 @@ export const metadata: Metadata = {
   title: "Controle de Si - Domine Vícios, Hábitos e Produtividade",
   description: "Transforme sua vida: combata vícios, crie hábitos, estude melhor e organize seu dia",
   manifest: "/manifest.json",
-  themeColor: "#0f172a",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -26,6 +24,14 @@ export const metadata: Metadata = {
   }
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#0f172a',
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,9 +44,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
         <meta name="apple-mobile-web-app-title" content="Controle de Si" />
       </head>
-      <body className={`${inter.className} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950`}>
+      <body className={`${inter.className} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden`}>
         <Navbar />
-        <main className="lg:pl-20 pb-20 lg:pb-0">
+        <main className="lg:pl-20 pb-20 lg:pb-0 h-screen overflow-y-auto">
           {children}
         </main>
       </body>

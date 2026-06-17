@@ -11,20 +11,20 @@ interface TutorialStep {
 
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
-    title: 'Bem-vindo ao Controle de Si!',
-    description: 'Vou te mostrar rapidamente como usar o app. São só 4 passos!'
+    title: 'E aí! Bem-vindo',
+    description: 'Vou te mostrar rapidinho como funciona. São só 4 passos!'
   },
   {
     title: 'Score de Consistência',
-    description: 'Aqui você vê seu desempenho diário de 0 a 100. Quanto maior, melhor você está indo!'
+    description: 'Aqui você vê como tá indo hoje, de 0 a 100. Quanto maior, melhor!'
   },
   {
-    title: 'Quick Actions',
-    description: 'Use estes botões para acessar rapidamente as funcionalidades principais do app.'
+    title: 'Ações Rápidas',
+    description: 'Usa esses botões pra acessar as paradas principais do app.'
   },
   {
-    title: 'Pronto para começar!',
-    description: 'Explore o menu superior para acessar Hábitos, Tarefas, Pomodoro, Estudos e muito mais. Boa jornada!'
+    title: 'Pronto pra começar!',
+    description: 'Explora o menu ali em cima pra ver Hábitos, Tarefas, Pomodoro e mais. Bora!'
   }
 ];
 

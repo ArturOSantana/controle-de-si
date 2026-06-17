@@ -145,44 +145,79 @@ export default function ReportsPage() {
         ? habitStats.reduce((worst, current) => current.completionRate < worst.completionRate ? current : worst)
         : null;
 
-      // Gerar insights
+      // Gerar insights mais naturais
       const insights: string[] = [];
       const recommendations: string[] = [];
 
+      // Análise de consistência com tom mais pessoal
       if (thisWeekConsistency >= 80) {
-        insights.push('Consistência excelente! Você está no caminho certo.');
+        insights.push('Cara, você tá mandando muito bem! Essa consistência de ' + thisWeekConsistency + '% é coisa de quem leva a sério.');
       } else if (thisWeekConsistency >= 60) {
-        insights.push('Boa consistência, mas há espaço para melhorar.');
+        insights.push('Tá indo bem, mas dá pra apertar mais um pouco. Você tem potencial pra chegar nos 80%.');
       } else if (thisWeekConsistency >= 40) {
-        insights.push('Consistência moderada. Foque em manter a rotina.');
+        insights.push('Olha, não tá ruim, mas também não tá bom. Hora de pegar mais firme na rotina.');
       } else {
-        insights.push('Consistência baixa. Hora de reagir!');
+        insights.push('Vou ser sincero: precisa melhorar. Mas relaxa, todo mundo passa por isso. Bora reagir?');
       }
 
-      if (thisWeekFocusMinutes > lastWeekFocusMinutes) {
-        insights.push(`Você focou ${thisWeekFocusMinutes - lastWeekFocusMinutes} minutos a mais que na semana passada!`);
-      } else if (thisWeekFocusMinutes < lastWeekFocusMinutes) {
-        insights.push(`Tempo de foco diminuiu ${lastWeekFocusMinutes - thisWeekFocusMinutes} minutos.`);
-        recommendations.push('Tente fazer pelo menos 4 sessões Pomodoro por dia');
+      // Análise de foco
+      const focusDiff = thisWeekFocusMinutes - lastWeekFocusMinutes;
+      if (focusDiff > 60) {
+        insights.push(`Olha só! Você focou ${focusDiff} minutos a mais essa semana. Isso é mais de 1 hora extra de trabalho profundo!`);
+      } else if (focusDiff > 0) {
+        insights.push(`Melhorou ${focusDiff} minutos de foco. Não é muito, mas já é progresso!`);
+      } else if (focusDiff < -60) {
+        insights.push(`Eita, caiu ${Math.abs(focusDiff)} minutos de foco. Tá tudo bem? Vamos recuperar essa semana.`);
+        recommendations.push('Que tal começar com 2 pomodoros por dia? Não precisa ser herói logo de cara');
+      } else if (focusDiff < 0) {
+        insights.push(`Foco caiu um pouco (${Math.abs(focusDiff)}min). Nada grave, mas fica ligado.`);
       }
 
-      if (thisWeekTasks.length > lastWeekTasks.length) {
-        insights.push(`${thisWeekTasks.length - lastWeekTasks.length} tarefas a mais concluídas!`);
-      } else if (thisWeekTasks.length < lastWeekTasks.length) {
-        recommendations.push('Defina 3 MITs (Most Important Tasks) toda manhã');
+      // Análise de tarefas
+      const tasksDiff = thisWeekTasks.length - lastWeekTasks.length;
+      if (tasksDiff > 5) {
+        insights.push(`Caramba! ${tasksDiff} tarefas a mais concluídas. Você tá voando!`);
+      } else if (tasksDiff > 0) {
+        insights.push(`Fechou ${tasksDiff} tarefas a mais. Pequenas vitórias somam!`);
+      } else if (tasksDiff < -3) {
+        insights.push(`Produtividade caiu um pouco nas tarefas. Talvez esteja pegando coisas demais?`);
+        recommendations.push('Menos é mais: escolhe 3 tarefas importantes por dia e foca nelas');
       }
 
-      if (worstHabit && worstHabit.completionRate < 50) {
-        recommendations.push(`Foque em "${worstHabit.name}" - está com apenas ${worstHabit.completionRate}% de conclusão`);
+      // Análise do pior hábito
+      if (worstHabit && worstHabit.completionRate < 30) {
+        recommendations.push(`"${worstHabit.name}" tá com só ${worstHabit.completionRate}%... Ou você pega firme nele ou tira da lista. Sem meio termo!`);
+      } else if (worstHabit && worstHabit.completionRate < 50) {
+        recommendations.push(`"${worstHabit.name}" precisa de atenção. ${worstHabit.completionRate}% não é suficiente pra criar o hábito.`);
       }
 
+      // Recomendações baseadas em consistência
       if (thisWeekConsistency < 60) {
-        recommendations.push('Reduza o número de hábitos e foque em 3-5 essenciais');
-        recommendations.push('Use a técnica de Habit Stacking para encadear hábitos');
+        recommendations.push('Você tem hábitos demais. Corta pra 3-5 essenciais e domina eles primeiro');
+        recommendations.push('Tenta encadear hábitos: "Depois de escovar os dentes, faço 10 flexões"');
       }
 
-      if (thisWeekFocusMinutes < 300) {
-        recommendations.push('Meta: 300 minutos de foco por semana (43min/dia)');
+      // Meta de foco
+      if (thisWeekFocusMinutes < 180) {
+        recommendations.push('Meta realista: 180min de foco por semana (uns 25min por dia). Começa por aí!');
+      } else if (thisWeekFocusMinutes < 300) {
+        recommendations.push('Você já tá focando bem. Próximo nível: 300min/semana (43min/dia)');
+      }
+
+      // Recomendações específicas baseadas em padrões
+      if (thisWeekHabitLogs.length > 0 && thisWeekTasks.length === 0) {
+        recommendations.push('Você tá fazendo hábitos mas não tá fechando tarefas. Equilibra isso!');
+      }
+
+      if (thisWeekPomodoros.length < 5) {
+        recommendations.push('Só ' + thisWeekPomodoros.length + ' pomodoros na semana? Tenta fazer pelo menos 1 por dia');
+      }
+
+      // Mensagem motivacional baseada no progresso geral
+      if (thisWeekXP > lastWeekXP * 1.2) {
+        insights.push('Você evoluiu MUITO essa semana. Sério, tá no caminho certo!');
+      } else if (thisWeekXP < lastWeekXP * 0.8) {
+        insights.push('Semana mais fraca que a anterior. Mas ei, acontece. Próxima semana você recupera!');
       }
 
       const weeklyReport: WeeklyReport = {

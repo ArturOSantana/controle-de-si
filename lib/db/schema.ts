@@ -280,9 +280,87 @@ export interface StudyGoal {
   createdAt: Date;
 }
 
+// Sistema M - Gestão de Múltiplos Interesses
+export interface MProject {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  pillar: 'stability' | 'growth' | 'curiosity'; // Pilar do Sistema M
+  
+  // Respostas do questionário
+  answers: {
+    wantToMaster: boolean; // Quer dominar ou só experimentar?
+    wantToMonetize: boolean | null; // Quer monetizar? (null = não aplicável)
+    hasMarketDemand: boolean | null; // Tem demanda no mercado?
+    isGoodAt: boolean | null; // É bom nisso?
+    stillInterestedIn1Year: boolean | null; // Ainda estará interessado daqui 1 ano?
+    complementsCareer: boolean | null; // Complementa carreira principal?
+    wouldDoWithout10Hours: boolean | null; // Faria com 10h livres?
+    alignsWithGoals: boolean | null; // Alinha com quem quer ser?
+    canAbandonWithoutGuilt: boolean | null; // Pode abandonar sem culpa?
+    feedsCreativity: boolean | null; // Alimenta criatividade?
+    wouldDoWithoutPraise: boolean | null; // Faria sem elogios?
+    regretNotTrying: boolean | null; // Se arrependeria de não tentar?
+    isEscape: boolean | null; // Está usando para fugir de algo?
+    requiresDepth: boolean | null; // Requer profundidade?
+  };
+  
+  // Métricas
+  hoursSpent: number; // horas dedicadas
+  lastWorkedOn?: Date;
+  startDate: Date;
+  endDate?: Date; // para projetos com prazo
+  
+  // Status
+  status: 'active' | 'paused' | 'completed' | 'abandoned';
+  priority: number; // 1-5
+  
+  // Notas e reflexões
+  notes?: string;
+  learnings?: string[]; // o que aprendeu
+  challenges?: string[]; // desafios enfrentados
+  
+  // Relacionamentos
+  relatedProjects?: string[]; // IDs de projetos relacionados
+  tags?: string[];
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Log de tempo dedicado a projetos do Sistema M
+export interface MProjectLog {
+  id: string;
+  projectId: string;
+  userId: string;
+  date: Date;
+  duration: number; // minutos
+  activity: string; // o que fez
+  progress?: string; // progresso alcançado
+  mood?: 'motivated' | 'neutral' | 'frustrated' | 'excited';
+  notes?: string;
+}
+
+// Revisão periódica dos projetos (recomendado mensalmente)
+export interface MProjectReview {
+  id: string;
+  userId: string;
+  date: Date;
+  projects: {
+    projectId: string;
+    shouldContinue: boolean;
+    shouldChangePillar: boolean;
+    newPillar?: 'stability' | 'growth' | 'curiosity';
+    reflections: string;
+  }[];
+  overallReflection?: string;
+  nextReviewDate: Date;
+}
+
 // Estrutura do banco IndexedDB
 export const DB_NAME = 'controle_de_si_db';
-export const DB_VERSION = 4; // Incrementado para novas tabelas
+export const DB_VERSION = 5; // Incrementado para Sistema M
 
 export const STORES = {
   users: 'users',
@@ -304,6 +382,9 @@ export const STORES = {
   studyTopics: 'studyTopics',
   studySchedules: 'studySchedules',
   studyGoals: 'studyGoals',
+  mProjects: 'mProjects', // Sistema M
+  mProjectLogs: 'mProjectLogs',
+  mProjectReviews: 'mProjectReviews',
 } as const;
 
 // Made with Bob

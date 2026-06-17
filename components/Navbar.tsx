@@ -23,6 +23,7 @@ import Image from 'next/image';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Início', imageName: 'home', ext: 'png' },
+  { href: '/sistema-m', icon: Sparkles, label: 'Sistema M', imageName: 'home', ext: 'png' },
   { href: '/habits', icon: Target, label: 'Hábitos', imageName: 'habits', ext: 'png' },
   { href: '/pomodoro', icon: Clock, label: 'Pomodoro', imageName: 'pomodoro', ext: 'png' },
   { href: '/tasks', icon: ListTodo, label: 'Tarefas', imageName: 'tasks', ext: 'png' },
@@ -32,7 +33,6 @@ const navItems = [
   { href: '/journal', icon: BookOpen, label: 'Diário', imageName: 'journal', ext: 'jpg' },
   { href: '/analytics', icon: BarChart3, label: 'Análises', imageName: 'analytics', ext: 'png' },
   { href: '/reports', icon: FileText, label: 'Relatórios', imageName: 'reports', ext: 'jpg' },
-  { href: '/achievements', icon: Trophy, label: 'Conquistas', imageName: 'achievements', ext: 'png' },
   { href: '/rewards', icon: Gift, label: 'Recompensas', imageName: 'rewards', ext: 'png' },
 ];
 

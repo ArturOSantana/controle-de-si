@@ -138,6 +138,27 @@ class DatabaseManager {
           goalStore.createIndex('type', 'type', { unique: false });
           goalStore.createIndex('completed', 'completed', { unique: false });
         }
+
+        // Sistema M - Gestão de Múltiplos Interesses
+        if (!db.objectStoreNames.contains(STORES.mProjects)) {
+          const mProjectStore = db.createObjectStore(STORES.mProjects, { keyPath: 'id' });
+          mProjectStore.createIndex('userId', 'userId', { unique: false });
+          mProjectStore.createIndex('pillar', 'pillar', { unique: false });
+          mProjectStore.createIndex('status', 'status', { unique: false });
+        }
+
+        if (!db.objectStoreNames.contains(STORES.mProjectLogs)) {
+          const mProjectLogStore = db.createObjectStore(STORES.mProjectLogs, { keyPath: 'id' });
+          mProjectLogStore.createIndex('projectId', 'projectId', { unique: false });
+          mProjectLogStore.createIndex('userId', 'userId', { unique: false });
+          mProjectLogStore.createIndex('date', 'date', { unique: false });
+        }
+
+        if (!db.objectStoreNames.contains(STORES.mProjectReviews)) {
+          const mProjectReviewStore = db.createObjectStore(STORES.mProjectReviews, { keyPath: 'id' });
+          mProjectReviewStore.createIndex('userId', 'userId', { unique: false });
+          mProjectReviewStore.createIndex('date', 'date', { unique: false });
+        }
       };
     });
   }

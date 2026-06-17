@@ -6,6 +6,7 @@ import { db, generateId } from '@/lib/db';
 import { STORES } from '@/lib/db/schema';
 import type { User, UserStats, Habit, Task, PomodoroSession } from '@/lib/db/schema';
 import { notificationManager, scheduleHabitReminders } from '@/lib/notifications';
+import { getRandomQuote } from '@/lib/quotes';
 import WelcomeModal from '@/components/WelcomeModal';
 import Tutorial from '@/components/Tutorial';
 import Image from 'next/image';
@@ -58,6 +59,12 @@ export default function HomePage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [dailyQuote, setDailyQuote] = useState(getRandomQuote());
+
+  // Atualizar frase a cada refresh
+  useEffect(() => {
+    setDailyQuote(getRandomQuote());
+  }, []);
 
   useEffect(() => {
     initializeApp();
@@ -349,11 +356,11 @@ export default function HomePage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              {/* Botão de Alternância de Ícones */}
+            <div className="flex items-center gap-3 md:gap-6">
+              {/* Botão de Alternância de Ícones - Oculto no mobile */}
               <button
                 onClick={() => useAppStore.getState().toggleImageIcons()}
-                className={`p-3 rounded-xl transition-all ${
+                className={`hidden md:block p-3 rounded-xl transition-all ${
                   useImageIcons
                     ? 'bg-violet-500/20 text-violet-400 hover:bg-violet-500/30'
                     : 'bg-fuchsia-500/20 text-fuchsia-400 hover:bg-fuchsia-500/30'
@@ -384,13 +391,14 @@ export default function HomePage() {
                 )}
               </button>
 
-              <div className="text-right">
+              {/* Level e XP - Oculto no mobile */}
+              <div className="hidden md:block text-right">
                 <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Level</p>
                 <p className="text-3xl font-black bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
                   {userStats?.level || 1}
                 </p>
               </div>
-              <div className="w-40">
+              <div className="hidden md:block w-40">
                 <div className="flex justify-between text-xs text-slate-400 mb-1">
                   <span>{userStats?.xp || 0} XP</span>
                   <span>{(userStats?.level || 1) * 100} XP</span>
@@ -411,6 +419,19 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Frase Motivacional do Dia */}
+        <div className="mb-8 bg-gradient-to-r from-violet-900/30 via-fuchsia-900/20 to-violet-900/30 border border-violet-500/30 rounded-2xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-full blur-3xl" />
+          <div className="relative">
+            <p className="text-lg md:text-xl text-white font-medium italic mb-2 leading-relaxed">
+              "{dailyQuote.text}"
+            </p>
+            <p className="text-sm text-violet-400 font-bold">
+              — {dailyQuote.author}
+            </p>
+          </div>
+        </div>
+
         {/* Score de Consistência + Próxima Ação */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Score de Consistência */}

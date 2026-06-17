@@ -5,7 +5,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { db, generateId } from '@/lib/db';
 import { STORES } from '@/lib/db/schema';
 import type { User, UserStats, Habit, Task, PomodoroSession } from '@/lib/db/schema';
-import { notificationManager, scheduleHabitReminders } from '@/lib/notifications';
+import { notificationManager, scheduleHabitReminders, scheduleDailyCheckIn, scheduleEvery6Hours, scheduleEvery12Hours } from '@/lib/notifications';
 import { getRandomQuote } from '@/lib/quotes';
 import WelcomeModal from '@/components/WelcomeModal';
 import Tutorial from '@/components/Tutorial';
@@ -70,6 +70,13 @@ export default function HomePage() {
     initializeApp();
     // Verificar status das notificações
     setNotificationsEnabled(notificationManager.isEnabled());
+    
+    // Agendar notificações recorrentes se já estiverem habilitadas
+    if (notificationManager.isEnabled()) {
+      scheduleDailyCheckIn(20, 0); // 20:00 (8 PM)
+      scheduleEvery6Hours(); // A cada 6 horas
+      scheduleEvery12Hours(); // A cada 12 horas
+    }
   }, []);
 
   const toggleNotifications = async () => {
@@ -77,6 +84,19 @@ export default function HomePage() {
       alert('Para desativar notificações, vá nas configurações do navegador');
       return;
     }
+
+    // Mostrar aviso explicativo antes de solicitar permissão
+    const userConfirmed = confirm(
+      '🔔 Ativar Notificações?\n\n' +
+      'Você receberá lembretes para:\n' +
+      '• Atualizar seu progresso diariamente (20h)\n' +
+      '• Check-ins a cada 6 e 12 horas\n' +
+      '• Conclusão de pomodoros e hábitos\n' +
+      '• Lembretes de tarefas importantes\n\n' +
+      'Clique em "OK" para permitir notificações.'
+    );
+
+    if (!userConfirmed) return;
 
     const granted = await notificationManager.requestPermission();
     if (granted) {
@@ -87,6 +107,11 @@ export default function HomePage() {
       if (habitsWithTime.length > 0) {
         scheduleHabitReminders(habitsWithTime.map(h => ({ name: h.name, time: h.time })));
       }
+      
+      // Agendar notificações recorrentes
+      scheduleDailyCheckIn(20, 0); // 20:00 (8 PM)
+      scheduleEvery6Hours(); // A cada 6 horas
+      scheduleEvery12Hours(); // A cada 12 horas
       
       // Notificação de teste
       await notificationManager.send({

@@ -12,19 +12,23 @@ interface TutorialStep {
 const TUTORIAL_STEPS: TutorialStep[] = [
   {
     title: 'E aí! Bem-vindo',
-    description: 'Vou te mostrar rapidinho como funciona. São só 4 passos!'
+    description: 'Vou te mostrar rapidinho como funciona. São só 5 passos!'
+  },
+  {
+    title: 'Frase do Dia',
+    description: 'Todo dia você vê uma frase inspiradora de santos. Atualiza a cada F5!'
   },
   {
     title: 'Score de Consistência',
     description: 'Aqui você vê como tá indo hoje, de 0 a 100. Quanto maior, melhor!'
   },
   {
-    title: 'Ações Rápidas',
-    description: 'Usa esses botões pra acessar as paradas principais do app.'
+    title: 'Notificações',
+    description: 'Ativa as notificações pra receber lembretes diários (20h), a cada 6h e 12h, além de avisos de pomodoro e hábitos!'
   },
   {
     title: 'Pronto pra começar!',
-    description: 'Explora o menu ali em cima pra ver Hábitos, Tarefas, Pomodoro e mais. Bora!'
+    description: 'Explora o menu pra ver Hábitos, Tarefas, Pomodoro e mais. Bora dominar o dia!'
   }
 ];
 

@@ -173,6 +173,16 @@ class NotificationManager {
   getPermissionStatus(): NotificationPermission {
     return this.permission;
   }
+  // Notificação diária de check-in
+  async notifyDailyCheckIn() {
+    return this.send({
+      title: '📅 Hora de Atualizar!',
+      body: 'Que tal dar uma olhada no seu progresso e atualizar suas metas?',
+      tag: 'daily-checkin',
+      requireInteraction: true,
+      data: { type: 'daily-checkin' }
+    });
+  }
 }
 
 // Exportar instância singleton
@@ -201,6 +211,72 @@ export function scheduleHabitReminders(habits: Array<{ name: string; time?: stri
       scheduleHabitReminders([habit]);
     }, timeUntilNotification);
   });
+}
+
+// Função para agendar notificação diária de check-in
+export function scheduleDailyCheckIn(hour: number = 20, minute: number = 0) {
+  const now = new Date();
+  const scheduledTime = new Date();
+  scheduledTime.setHours(hour, minute, 0, 0);
+
+  // Se o horário já passou hoje, agendar para amanhã
+  if (scheduledTime <= now) {
+    scheduledTime.setDate(scheduledTime.getDate() + 1);
+  }
+
+  const timeUntilNotification = scheduledTime.getTime() - now.getTime();
+
+  setTimeout(() => {
+    notificationManager.notifyDailyCheckIn();
+    // Reagendar para o próximo dia (24 horas)
+    scheduleDailyCheckIn(hour, minute);
+  }, timeUntilNotification);
+
+  console.log(`Notificação diária agendada para ${scheduledTime.toLocaleString('pt-BR')}`);
+}
+
+// Função para agendar notificações a cada 6 horas
+export function scheduleEvery6Hours() {
+  const SIX_HOURS = 6 * 60 * 60 * 1000; // 6 horas em milissegundos
+  
+  const sendNotification = () => {
+    notificationManager.send({
+      title: '⏰ Lembrete de 6h',
+      body: 'Hora de revisar seu progresso e manter o foco!',
+      tag: 'six-hour-reminder'
+    });
+  };
+
+  // Enviar primeira notificação após 6 horas
+  setTimeout(() => {
+    sendNotification();
+    // Continuar enviando a cada 6 horas
+    setInterval(sendNotification, SIX_HOURS);
+  }, SIX_HOURS);
+
+  console.log('Notificações a cada 6 horas ativadas');
+}
+
+// Função para agendar notificações a cada 12 horas
+export function scheduleEvery12Hours() {
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000; // 12 horas em milissegundos
+  
+  const sendNotification = () => {
+    notificationManager.send({
+      title: '🌟 Check-in de 12h',
+      body: 'Metade do dia! Como está seu progresso?',
+      tag: 'twelve-hour-reminder'
+    });
+  };
+
+  // Enviar primeira notificação após 12 horas
+  setTimeout(() => {
+    sendNotification();
+    // Continuar enviando a cada 12 horas
+    setInterval(sendNotification, TWELVE_HOURS);
+  }, TWELVE_HOURS);
+
+  console.log('Notificações a cada 12 horas ativadas');
 }
 
 // Made with Bob

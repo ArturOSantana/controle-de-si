@@ -8,6 +8,7 @@ import { STORES } from '@/lib/db/schema';
 import type { PomodoroSession } from '@/lib/db/schema';
 import { Play, Pause, RotateCcw, Home, Coffee, Brain } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { notificationManager } from '@/lib/notifications';
 
 type TimerMode = 'focus' | 'short-break' | 'long-break';
 
@@ -145,17 +146,21 @@ export default function PomodoroPage() {
           updateStats({
             totalFocusTime: (userStats?.totalFocusTime || 0) + actualDuration
           });
-          setCompletedPomodoros(prev => prev + 1);
+          const newCompletedCount = completedPomodoros + 1;
+          setCompletedPomodoros(newCompletedCount);
+          
+          // Notificação de pomodoro completo
+          await notificationManager.notifyPomodoroComplete(newCompletedCount);
         }
       }
     }
 
-    // Mostrar notificação
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Controle de Si', {
-        body: mode === 'focus' ? 'Pomodoro completo! Hora de descansar.' : 'Pausa terminada! Hora de focar.',
-        icon: '/icon-192x192.png'
-      });
+    // Mostrar notificação apropriada
+    if (mode === 'focus') {
+      // Já enviada acima com notifyPomodoroComplete
+    } else {
+      // Notificação de pausa terminada
+      await notificationManager.notifyBreakComplete();
     }
 
     // Alternar automaticamente entre foco e pausa

@@ -268,7 +268,7 @@ export default function HomePage() {
     const focusScore = Math.min((focusTime / 120) * 25, 25);
     score += focusScore;
 
-    // Sobriedade (15 pontos)
+    // Sobriedade (15 pontos) - só conta se tiver vícios cadastrados
     const addictions = await db.getByIndex<any>(STORES.addictions, 'userId', currentUser.id);
     const activeAddictions = addictions.filter(a => a.active);
     if (activeAddictions.length > 0) {
@@ -280,9 +280,8 @@ export default function HomePage() {
       });
       const sobrietyScore = todayRelapses.length === 0 ? 15 : 0;
       score += sobrietyScore;
-    } else {
-      score += 15; // Bônus se não tem vícios cadastrados
     }
+    // Se não tem vícios cadastrados, não ganha nem perde pontos (0 pontos)
 
     setConsistencyScore(Math.round(score));
   };

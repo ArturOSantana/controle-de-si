@@ -24,6 +24,7 @@ import {
 import { format, startOfDay, isToday, startOfWeek, startOfMonth, isAfter, isSameDay } from 'date-fns'
 import { ptBR } from 'date-fns/locale';
 import { HABITS_LIBRARY, HABIT_CATEGORIES, type HabitTemplate } from '@/lib/habits-library';
+import { notificationManager } from '@/lib/notifications';
 
 export default function HabitsPage() {
   const router = useRouter();
@@ -298,6 +299,19 @@ export default function HabitsPage() {
         habitsCompleted: (userStats?.habitsCompleted || 0) + 1,
         currentStreak: habit.streak
       });
+      
+      // Notificação de hábito completado
+      if (habit.streak % 7 === 0) {
+        // Milestone de streak
+        await notificationManager.notifyStreakMilestone(habit.streak);
+      } else if (habit.streak === 1) {
+        // Primeiro dia do hábito
+        await notificationManager.send({
+          title: '🎯 Hábito Completado!',
+          body: `${habit.name} - Continue assim!`,
+          tag: `habit-${habit.id}`
+        });
+      }
       
       // Sugerir próximo hábito na corrente
       const nextHabit = habits.find(h => h.anchor === habit.name && !todayLogs.has(h.id));

@@ -138,28 +138,9 @@ export default function Navbar() {
 
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-t border-slate-800/50 z-50 safe-area-inset-bottom">
-        <div className="flex items-center justify-between px-2 py-2">
-          {/* Botão de Alternância - Mobile */}
-          <button
-            onClick={toggleImageIcons}
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all min-w-[60px] ${
-              useImageIcons
-                ? 'bg-gradient-to-br from-violet-500 to-fuchsia-500'
-                : 'bg-gradient-to-br from-fuchsia-500 to-pink-500'
-            }`}
-          >
-            {useImageIcons ? (
-              <Sparkles className="w-5 h-5 text-white" />
-            ) : (
-              <ImageIcon className="w-5 h-5 text-white" />
-            )}
-            <span className="text-[10px] font-medium text-white">
-              {useImageIcons ? 'Sistema' : 'Imagem'}
-            </span>
-          </button>
-
-          {/* Nav Items */}
-          {navItems.slice(0, 4).map((item) => {
+        <div className="flex items-center justify-around px-2 py-2">
+          {/* Nav Items - Mostrando 5 itens principais */}
+          {navItems.slice(0, 5).map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             

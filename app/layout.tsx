@@ -44,9 +44,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
         <meta name="apple-mobile-web-app-title" content="Controle de Si" />
       </head>
-      <body className={`${inter.className} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden`}>
+      <body className={`${inter.className} antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 min-h-screen`}>
         <Navbar />
-        <main className="lg:pl-20 pb-20 lg:pb-0 h-screen overflow-y-auto">
+        <main className="lg:pl-20 pb-20 lg:pb-0 min-h-screen">
           {children}
         </main>
       </body>
